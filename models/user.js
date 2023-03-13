@@ -57,5 +57,8 @@ module.exports = class User extends Sequelize.Model {
       as: "Followings",
       through: "Follow",
     });
+
+    // User모델과 Post모델은 1:N관계 (hasMany). 사용자 한 명이 여러 도메인을 소유할 수 있음
+    db.User.hasMany(db.Domain);
   }
 };
