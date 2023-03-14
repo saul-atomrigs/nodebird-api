@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
+const cors = require('cors')
+const {Domain} = require('../models')
 
 exports.verifyToken = (req, res, next) => {
     try {
@@ -40,3 +42,18 @@ exports.deprecated = (req, res) => {
     });
 }
 
+
+exports.corsWhenDomainMatches = async (req, res, next) => {
+    // 도메인 모델로 클라이언트의 도메인 (req.get('origin'))과 호스트가 일치하는 것이 있는지 검사한다:
+    const domain = await Domain.findOne({
+        where: {host: req.get('origin')},
+    });
+    // 일치하는 것이 있다면:
+    if (domain) {
+        // CORS를 허용해서 다음 미들웨어로 보내고
+        cors({origin: req.get('origin'), credentials: true})(req, res, next);
+    // 일치하는 것이 없다면 CORS없이 next를 호출한다:
+    } else {
+        next();
+    }
+}

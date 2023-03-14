@@ -1,11 +1,22 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const cors = require('cors');
 
 // apiLimiter 미들웨어를 추가한다:
-const { verifyToken, apiLimiter } = require('./middlewares');
+// 처음에 비밀 키 발급 시 허용한 도메인을 적게하여 호스트와 비밀키가 모두 일치할 때만 CORS를 허용하도록 한다 (corsWhenDomainMatches 미들웨어):
+const { verifyToken, apiLimiter, corsWhenDomainMatches } = require('./middlewares');
 const { Domain, User, Post, Hashtag } = require('../models');
 
 const router = express.Router();
+
+// router.use로 v2의 모든 라우터에 적용한다:
+router.use(cors({
+  // credentials: true 옵션을 추가해야 도메인 간에 쿠키가 공유된다:
+  credentials: true
+}))
+
+// 처음에 비밀 키 발급 시 허용한 도메인을 적게하여 호스트와 비밀키가 모두 일치할 때만 CORS를 허용하도록 한다 (corsWhenDomainMatches 미들웨어):
+router.use(corsWhenDomainMatches)
 
 // POST /v2/token 라우터. 클라이언트가 발급받은 clientSecret으로 토큰을 발급받는 라우터이다:
 // router.post('/token', apiLimiter, createToken)
