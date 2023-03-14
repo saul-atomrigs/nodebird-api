@@ -1,16 +1,15 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 
-// 기존 v1 라우터를 사용할 때는 경고메시지를 띄우기 위해 deprecated 미들웨어를 추가한다:
-const { verifyToken, deprecated } = require('./middlewares');
+// apiLimiter 미들웨어를 추가한다:
+const { verifyToken, apiLimiter } = require('./middlewares');
 const { Domain, User, Post, Hashtag } = require('../models');
 
 const router = express.Router();
 
-// 기존 v1 라우터를 사용할 때는 경고메시지를 띄우기 위해 deprecated 미들웨어를 추가한다:
-router.use(deprecated)
-
-router.post('/token', async (req, res) => {
+// POST /v2/token 라우터. 클라이언트가 발급받은 clientSecret으로 토큰을 발급받는 라우터이다:
+// router.post('/token', apiLimiter, createToken)
+router.post('/token', apiLimiter, async (req, res) => {
   const { clientSecret } = req.body;
   try {
     const domain = await Domain.findOne({
@@ -30,7 +29,7 @@ router.post('/token', async (req, res) => {
       id: domain.User.id,
       nick: domain.User.nick,
     }, process.env.JWT_SECRET, {
-      expiresIn: '1m', // 1분
+      expiresIn: '30m', // 토큰 유효기간을 30분으로 제한
       issuer: 'nodebird',
     });
     return res.json({
@@ -47,13 +46,14 @@ router.post('/token', async (req, res) => {
   }
 });
 
-router.get('/test', verifyToken, (req, res) => {
+// router.get('/test', verifyToken, apiLimiter, TokenTest)
+router.get('/test', verifyToken, apiLimiter, (req, res) => {
   res.json(req.decoded);
 });
 
-// GET /posts/my 라우터. 내가 올린 포스트를 가져오는 라우터이다:
-// router.get('/posts/my', verifyToken, getMyPosts)
-router.get('/posts/my', verifyToken, (req, res) => {
+// GET /v2/posts/my 라우터. 내가 올린 포스트를 가져오는 라우터이다:
+// router.get('/posts/my', verifyToken, apiLimiter, getMyPosts)
+router.get('/posts/my', apiLimiter, verifyToken, (req, res) => {
   Post.findAll({ where: { userId: req.decoded.id } })
     .then((posts) => {
       console.log(posts);
@@ -71,9 +71,9 @@ router.get('/posts/my', verifyToken, (req, res) => {
     });
 });
 
-// GET /posts/hashtag/:title 라우터. 해시태그 검색결과를 가져오는 라우터이다:
-// router.get('/posts/hashtag/:title', verifyToken, getPostsByHashtag)
-router.get('/posts/hashtag/:title', verifyToken, async (req, res) => {
+// GET /v2/posts/hashtag/:title 라우터. 해시태그로 검색한 포스트를 가져오는 라우터이다:
+// router.get('/posts/hashtag/:title', verifyToken, apiLimiter, getHashtagPosts)
+router.get('/posts/hashtag/:title', verifyToken, apiLimiter, async (req, res) => {
   try {
     const hashtag = await Hashtag.findOne({ where: { title: req.params.title } });
     if (!hashtag) {
