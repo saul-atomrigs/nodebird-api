@@ -28,6 +28,7 @@
     "uuid": "^7.0.3"
   },
   "devDependencies": {
+    "artillery": "^2.0.0-30",
     "jest": "^29.5.0",
     "nodemon": "^2.0.3",
     "supertest": "^6.3.3"
