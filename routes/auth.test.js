@@ -116,6 +116,8 @@ describe("GET /logout", () => {
   });
 });
 
+// 테스트 종료 시 데이터를 정리하는 코드 (예를들어 회원가입 테스트를 위해 만든 이메일을 DB에서 삭제):
 afterAll(async () => {
+  // table 다시 생성:
   await sequelize.sync({ force: true });
 });
