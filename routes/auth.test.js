@@ -8,6 +8,7 @@ beforeAll(async () => {
   await sequelize.sync();
 });
 
+// 회원가입을 테스트한다:
 describe("POST /join", () => {
   test("로그인 안 했으면 가입", (done) => {
     // supertest 패키지로부터 request함수를 불러와 app객체를 넣어준다:
@@ -25,18 +26,23 @@ describe("POST /join", () => {
   });
 });
 
+// 로그인한 상태에서 회원가입을 테스트한다:
 describe("POST /login", () => {
+  // agent를 만들어서 하나 이상의 요청에서 재사용할 수 있다:
   const agent = request.agent(app);
+  // beforeEach는 각각의 테스트 실행에 앞서 먼저 실행되는 부분이다.
   beforeEach((done) => {
+    // agent를 통해 로그인 요청을 보낸다:
     agent
       .post("/auth/login")
       .send({
         email: "zerohch0@gmail.com",
         password: "nodejsbook",
       })
-      .end(done);
+      .end(done); // beforeEach 함수가 마무리되었음을 알린다.
   });
 
+  //로그인된 agent로 회원가입을 시도한다:
   test("이미 로그인했으면 redirect /", (done) => {
     const message = encodeURIComponent("로그인한 상태입니다.");
     agent
@@ -46,6 +52,7 @@ describe("POST /login", () => {
         nick: "zerocho",
         password: "nodejsbook",
       })
+      // 로그인된 상태이므로 '로그인한 상태입니다.'라는 에러메시지와 함께 /로 리다이렉트 된다.
       .expect("Location", `/?error=${message}`)
       .expect(302, done);
   });
