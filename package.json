@@ -4,7 +4,8 @@
   "description": "NodeBird API 서버",
   "main": "server.js",
   "scripts": {
-    "start": "nodemon server",
+    "start": "NODE_ENV=production PORT=80 node server",
+    "dev": "nodemon server",
     "test": "jest",
     "coverage": "jest --coverage"
   },
