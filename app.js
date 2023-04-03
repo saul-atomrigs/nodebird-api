@@ -32,22 +32,36 @@ sequelize
     console.error(err);
   });
 
-app.use(morgan("dev"));
+// morgan을 개발용에서 배포용으로 변경:
+if (process.env.NODE_ENV === "production") {
+  app.enable("trust proxy");
+  app.use(morgan("combined"));
+  app.use(helmet({ contentSecurityPolicy: false }));
+  app.use(hpp());
+} else {
+  app.use(morgan("dev"));
+}
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser(process.env.COOKIE_SECRET));
-app.use(
-  session({
-    resave: false,
-    saveUninitialized: false,
-    secret: process.env.COOKIE_SECRET,
-    cookie: {
-      httpOnly: true,
-      secure: false,
-    },
-  })
-);
+
+// express-session을 개발용에서 배포용으로 변경:
+const sessionOption = {
+  resave: false,
+  saveUninitialized: false,
+  secret: process.env.COOKIE_SECRET,
+  cookie: {
+    httpOnly: true,
+    secure: false,
+  },
+  store: new RedisStore({ client: redisClient }),
+};
+if (process.env.NODE_ENV === "production") {
+  sessionOption.proxy = true;
+  // sessionOption.cookie.secure = true;
+}
+app.use(session(sessionOption));
 app.use(passport.initialize());
 app.use(passport.session());
 
